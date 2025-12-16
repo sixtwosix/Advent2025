@@ -65,15 +65,12 @@ func getMostJoltage(s string, maxDepth int) int {
 				if max == 0 {
 					continue
 				}
-				if (firstNum*(int(math.Pow10(maxDepth-1))) + max) > total {
-					total = firstNum*(int(math.Pow10(maxDepth-1))) + max
-				}
 			} else {
-				res := getMostJoltage(s[i+1:], maxDepth - 1)
-				if (firstNum*(int(math.Pow10(maxDepth-1))) + res) > total {
-					total = firstNum*(int(math.Pow10(maxDepth-1))) + res
-				}
-			}			
+				max = getMostJoltage(s[i+1:], maxDepth - 1)
+			}
+			if (firstNum*(int(math.Pow10(maxDepth-1))) + max) > total {
+				total = firstNum*(int(math.Pow10(maxDepth-1))) + max
+			}	
 		}
 	}
 
