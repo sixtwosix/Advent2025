@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
-
-	"advent2025/Day7/queue"
 )
 
 type Coordinates struct {
@@ -30,8 +27,8 @@ func (c *Coordinates) IsEqual(b Coordinates) bool {
 }
 
 func main() {
-	fileName := "test_input1.dat"
-	// Part1(fileName)
+	fileName := "input1.dat"
+	Part1(fileName)
 	Part2(fileName)
 }
 
@@ -89,91 +86,66 @@ func Part2(fileName string) {
 		}
 	}
 
-	fmt.Printf("Grid: \n %+v \n", grid)
-
-	res := BFS(grid, Coordinates{row: start_row, col: start_col})
-
-	starts := make([]Coordinates, 0, len(grid[0]))
-	for key := range res {
-		if key.row == len(grid) - 1 {
-			starts = append(starts, key)
-		}
-	}
-
-	fmt.Printf("Starting points: \n %+v \n", starts)
-	
-	total := 0
-
-	for key, val := range res {
-/* 		fmt.Printf("%+v \t %+v \n", key, val) */
-		if slices.Contains(starts, key) {
-			total += len(val)
-		}
-	}
+	start := Coordinates{row: start_row, col: start_col}
+	total := CalculateAllPaths(grid, start)
 
 	fmt.Printf("Total paths: %d \n", total)
 }
-
-func TotalPaths()  {
-	
-}
-
-func BFS(grid [][]string, root Coordinates) map[Coordinates][]Coordinates {
-	queue := queue.NewQueue[Coordinates]()
-	explored := make(map[Coordinates][]Coordinates)
-
-	explored[root] = []Coordinates{root}
-	queue.Push(root)
+/* procedure DFS(G, v) is
+  label v as discovered
+	for all directed edges from v to w that are in G.adjacentEdges(v) do
+			if vertex w is not labeled as discovered then
+				recursively call DFS(G, w) */
+func CalculateAllPaths(grid [][]string, start Coordinates) int {
 
 	min_col, max_col := 0, len(grid[0])
 	max_row := len(grid)
+	discovered := make(map[Coordinates]bool)
+	memo := make(map[Coordinates]int)
+	
+	var dfsRec func(v Coordinates) int
+	dfsRec = func (v Coordinates) int {
 
-	for len(*queue) > 0 {
-		v, ok := queue.Pop()
-		if !ok {
-			break
+		if val, ok := memo[v]; ok {
+			return val
 		}
+
+		discovered[v] = true
+		// fmt.Println(v)
 
 		if v.row+1 >= max_row {
-			continue
+			memo[v] += 1
+			return 1
 		}
+		total := 0
+		switch grid[v.row+1][v.col] {
+		case "^":
 
-		if grid[v.row+1][v.col] == "^" {
-
-			if v.col-1 >= min_col {
-				w1 := Coordinates{row: v.row + 1, col: v.col - 1}
-				if _, ok := explored[w1]; !ok {
-					explored[w1] = []Coordinates{v}
-				} else {
-					explored[w1] = append(explored[w1], v)
-				}
-				queue.Push(w1)
+			// Left
+			l := Coordinates{row: v.row+1, col: v.col-1}
+			// if _, ok := discovered[l];l.col >= min_col && !ok{
+			if l.col >= min_col {
+				total += dfsRec(l)
 			}
-			if v.col+1 < max_col {
-				w2 := Coordinates{row: v.row + 1, col: v.col + 1}
-				if _, ok := explored[w2]; !ok {
-					explored[w2] = []Coordinates{v}					
-				} else {
-					explored[w2] = append(explored[w2], v)
-				}
-				queue.Push(w2)
+			// Right
+			r := Coordinates{row: v.row+1, col: v.col+1}
+			// if _, ok := discovered[r];r.col < max_col && !ok{
+			if r.col < max_col {
+				total += dfsRec(r)
 			}
-
+		case ".":
+			// Down
+			d := Coordinates{row: v.row+1, col: v.col}
+			total += dfsRec(d)
 		}
-
-		if grid[v.row+1][v.col] == "." {
-			w := Coordinates{row: v.row + 1, col: v.col}
-			if _, ok := explored[w]; !ok {
-				explored[w] = []Coordinates{v}
-				queue.Push(w)
-			} else {
-				explored[w] = append(explored[w], v)
-			}
-		}
-
+		memo[v] += total
+		return total
 	}
 
-	return explored
+	total := dfsRec(start)
+
+	return total
+
 }
 
 func readFile(fileName string) []string {
@@ -197,3 +169,5 @@ func checkErr(err error) {
 		panic(err)
 	}
 }
+
+
