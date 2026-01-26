@@ -21,7 +21,7 @@ func Part1(fileName string) {
 	maxPairs := 1000
 
 	lines := readFile(fileName)
-	junctionBoxes := make([]coordinate, 0, len(lines))
+	junctionBoxes := make([]Coordinate, 0, len(lines))
 	for _, line := range lines {
 		temp := strings.Split(line,",")
 		x, err := strconv.Atoi(temp[0]) 
@@ -30,7 +30,7 @@ func Part1(fileName string) {
 		checkErr(err)
 		z, err := strconv.Atoi(temp[2]) 
 		checkErr(err)
-		junctionBoxes = append(junctionBoxes, coordinate{
+		junctionBoxes = append(junctionBoxes, Coordinate{
 			x: x,
 			y: y,
 			z: z,
@@ -63,7 +63,20 @@ func Part1(fileName string) {
 		}
 	}
 
+	
+
 	// Pop first 1000 from minHeap
+	for i := 0; i < maxPairs; i++ {
+		minDistance := minHeap.Remove()
+
+		filteredMap := mapFilter(juncCombos, func(c CoordinateSet, val float64) bool {
+			return val == minDistance
+		})
+		for k, v := range filteredMap {
+
+		}
+
+	}
 
 	// Join all sets
 	// do merge when two groups are joining together
@@ -74,7 +87,20 @@ func Part2(fileName string) {
 	
 }
 
-func determineEuclideanDistance(a, b coordinate) float64 {
+
+func mapFilter(m map[CoordinateSet]float64, pred func(CoordinateSet, float64) bool) map[CoordinateSet]float64 {
+	result := make(map[CoordinateSet]float64)
+
+	for k, v := range m {
+		if pred(k,v) {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+func determineEuclideanDistance(a, b Coordinate) float64 {
 	x := math.Pow((float64(a.x)-float64(b.x)),2)
 	y := math.Pow((float64(a.y)-float64(b.y)), 2)
 	z := math.Pow((float64(a.z)-float64(b.z)),2)
@@ -83,11 +109,11 @@ func determineEuclideanDistance(a, b coordinate) float64 {
 }
 
 type CoordinateSet struct {
-	boxA coordinate
-	boxB coordinate
+	boxA Coordinate
+	boxB Coordinate
 }
 
-type coordinate struct {
+type Coordinate struct {
 	x int
 	y int
 	z int
