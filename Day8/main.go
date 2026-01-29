@@ -15,7 +15,7 @@ import (
 func main() {
 	fileName := "input1.dat"
 	Part1(fileName)
-	// Part2(fileName)
+	Part2(fileName)
 }
 
 func Part1(fileName string) {
@@ -75,15 +75,10 @@ func Part1(fileName string) {
 		filteredMap := mapFilter(juncCombos, func(c CoordinateSet, val float64) bool {
 			return val == minDistance
 		})
-		// fmt.Println(filteredMap)
 
 		for k := range filteredMap {
 			circuits.Add(k)
 		}
-		// for key, val := range circuits.circuits {
-		// 	fmt.Println(key, val)
-		// }
-		// fmt.Println()
 	}
 
 	counts := make([]int, 0)
@@ -104,6 +99,94 @@ func Part1(fileName string) {
 }
 
 func Part2(fileName string) {
+
+	lines := readFile(fileName)
+	junctionBoxes := make([]Coordinate, 0, len(lines))
+	for _, line := range lines {
+		temp := strings.Split(line, ",")
+		x, err := strconv.Atoi(temp[0])
+		checkErr(err)
+		y, err := strconv.Atoi(temp[1])
+		checkErr(err)
+		z, err := strconv.Atoi(temp[2])
+		checkErr(err)
+		junctionBoxes = append(junctionBoxes, Coordinate{
+			x: x,
+			y: y,
+			z: z,
+		})
+	}
+
+	array := []float64{}
+	minHeap := &heap.MinHeap[float64]{}
+	minHeap.BuildHeap(array)
+
+	juncCombos := make(map[CoordinateSet]float64)
+
+	for _, jbA := range junctionBoxes {
+	InnerLoop:
+		for _, jbB := range junctionBoxes {
+			if jbA == jbB {
+				continue InnerLoop
+			}
+			set := CoordinateSet{boxA: jbA, boxB: jbB}
+			setRev := CoordinateSet{boxA: jbB, boxB: jbA}
+			_, ok := juncCombos[set]
+			_, okRev := juncCombos[setRev]
+			if ok || okRev {
+				continue InnerLoop
+			}
+			res := determineEuclideanDistance(jbA, jbB)
+			minHeap.Insert(res)
+			juncCombos[set] = res
+		}
+	}
+
+	circuits := NewCircuits()
+
+	var lastAdded []CoordinateSet
+	maxCoordinateCounts := len(junctionBoxes)
+	foundCoordinates := make([]Coordinate, maxCoordinateCounts)
+
+WhileLoop:
+	for {
+		var zero float64
+		minDistance := minHeap.Remove()
+		if minDistance == zero {
+			fmt.Println(circuits.circuits)
+			break WhileLoop
+		}
+
+		filteredMap := mapFilter(juncCombos, func(c CoordinateSet, val float64) bool {
+			return val == minDistance
+		})
+
+		lastAdded = make([]CoordinateSet, 0)
+		for k := range filteredMap {
+			if !slices.Contains(foundCoordinates, k.boxA) {
+				foundCoordinates = append(foundCoordinates, k.boxA)
+			}
+			if !slices.Contains(foundCoordinates, k.boxB) {
+				foundCoordinates = append(foundCoordinates, k.boxB)
+			}
+			circuits.Add(k)
+			lastAdded = append(lastAdded, k)
+		}
+
+		keys := make([]string, 0)
+		for k := range circuits.circuits {
+			keys = append(keys, k)
+		}
+		if len(keys) == 1 && len(circuits.circuits[keys[0]]) == maxCoordinateCounts{
+			// fmt.Println(circuits.circuits)
+			break WhileLoop
+		}
+	}
+
+	fmt.Printf("The last coordinate set added: %+v \n", lastAdded[0])
+	res := lastAdded[0].boxA.x * lastAdded[0].boxB.x
+	fmt.Printf("multiply %d * %d = %d \n", lastAdded[0].boxA.x, lastAdded[0].boxB.x, res)
+
 }
 
 func mapFilter(m map[CoordinateSet]float64, pred func(CoordinateSet, float64) bool) map[CoordinateSet]float64 {

@@ -24,7 +24,11 @@ func (h *MinHeap[T]) BuildHeap(array []T) {
 // Remove
 // remove and return the minimum value and update heap ordering
 func (h* MinHeap[T]) Remove() T {
+	var zero T
 	n := len(*h)
+	if n == 0 {
+		return zero
+	}
 	// swap first and last element in the array
 	h.swap(0, n-1)
 	valueToRemove := (*h)[n-1]
